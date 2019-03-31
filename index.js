@@ -12,9 +12,9 @@ const ErrorCode = {
 };
 
 const BITalino = class BITalino {
-    constructor(macAddress, timeout = null, callback) {
+    constructor(address, timeout = null, callback) {
         const macRegex = /^([0-9A-Fa-f]{2}[:-]){5}([0-9A-Fa-f]{2})$/
-        const checkMatch = macRegex.test(macAddress);
+        const checkMatch = macRegex.test(address);
         this.blocking = !timeout;
 
         if (!this.blocking) {
@@ -24,18 +24,18 @@ const BITalino = class BITalino {
                 throw new Error(ErrorCode.INVALID_PARAMETER);
             }
         }
-        if (checkMatch) {   // Bluetooth
+        if (checkMatch) {
             if (process.platform === 'win32' || process.platform === 'linux') { // Only supports linux.
                 const bluetooth = require('node-bluetooth');
 
                 const device = new bluetooth.DeviceINQ();
-                device.findSerialPortChannel(macAddress, (channel) => {
+                device.findSerialPortChannel(address, (channel) => {
 
                     if (channel < 0) {
                         throw new Error(ErrorCode.CHANNEL_NOT_FOUND);
                     }
 
-                    bluetooth.connect(macAddress, channel, (err, connection) => {
+                    bluetooth.connect(address, channel, (err, connection) => {
                         this.socket = connection;
                         if (err) return console.error(err);
 
@@ -54,18 +54,40 @@ const BITalino = class BITalino {
             } else {
                 throw new Error(ErrorCode.INVALID_PLATFORM);
             }
-        } else if (x) {   // BLE
-            try {
-                const bluetooh = require('bluetooth');
-            } catch (e) {
-                throw new Error(ErrorCode.IMPORT_FAILED + str(e));
-            }
+        } else if (address.substr(0, 3) === 'COM' && process.platform === 'win32'
+            || address.substr(0, 5) === '/dev/' && process.platform !== 'win32') {   // BLE
+            const btSerial = new (require('bluetooth-serial-port')).BluetoothSerialPort();
+            btSerial.connect(address, 115200, function () {
+                console.log('connected');
+
+                btSerial.write(Buffer.from('my data', 'utf-8'), function (err, bytesWritten) {
+                    if (err) console.log(err);
+                });
+
+                btSerial.on('data', function (buffer) {
+                    console.log(buffer.toString('utf-8'));
+                });
+            }, function () {
+                console.log('cannot connect');
+            });
+
+            this.wifi = false;
+            this.serial = true;
+        } else if(address.replace(/[^:]/g, "").length) {
+            const net = require('net');
+            const dest = address.split(':');
+            net.createConnection(dest[1], dest[0], function() {
+                console.log('connected');
+            });
+
+            this.wifi = true;
+            this.serial = false;
         } else {
             throw new Error(ErrorCode.INVALID_ADDRESS);
         }
 
         this.started = false;
-        this.macAddress = macAddress;
+        this.address = address;
 
         const setupVersion = () => {
             this.split_string = '_v';
@@ -86,7 +108,7 @@ const BITalino = class BITalino {
             // CommandVersion: 00000111, 0x07, 7
             this.send(7);
             versionStr = '';
-            while(true) {
+            while (true) {
                 versionStr += this.receive(1).decode('utf-8')
                 if (versionStr[-1] === '\n' && versionStr.indexOf('BITalino') >= 0) {
                     break;
@@ -115,8 +137,8 @@ const BITalino = class BITalino {
                     }
                 }
 
-                while(true) { // God no, why, only for now.
-                    if(this.buffer.slice(0, 1)) {
+                while (true) { // God no, why, only for now.
+                    if (this.buffer.slice(0, 1)) {
                         data.write(this.buffer.slice(0, 1));
                         this.buffer = this.buffer.slice(1);
                         pointer++;
@@ -134,6 +156,6 @@ const BITalino = class BITalino {
 }
 
 exports.ErrorCode = ErrorCode;
-exports.createBITalino = function (macAddress, timeout = null, callback) {
-    new BITalino(macAddress, timeout, callback);
+exports.createBITalino = function (address, timeout = null, callback) {
+    new BITalino(address, timeout, callback);
 };
