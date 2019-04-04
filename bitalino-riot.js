@@ -14,7 +14,7 @@ module.exports = class BITalinoRIOT extends EventEmitter {
             metadata: true
         });
         
-        this.udpPort.on('message', function(packet) {
+        this.udpPort.on('message', (packet) => {
             if(/^\/[0-9]*\/bitalino/.test(packet.address)) {
         
             } else if(/^\/[0-9]*\/raw/.test(packet.address)) {
@@ -45,17 +45,17 @@ module.exports = class BITalinoRIOT extends EventEmitter {
                         packet.args[20]
                     ]
                 }
+
+                this.emit('raw', raw);
             } else {
                 throw new Error(ErrorCode.INVALID_PACKET + packet);
             }
-
-            this.emit('packet', packet);
         });
         
         this.udpPort.open();
         
         
-        this.udpPort.on('ready', function () {
+        this.udpPort.on('ready', () => {
             this.emit('ready');
         });
     }
