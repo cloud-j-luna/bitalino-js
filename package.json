@@ -4,7 +4,9 @@
   "description": "Node API for BITalino",
   "main": "index.js",
   "scripts": {
-    "test": "mocha test"
+    "test": "mocha test",
+    "install": "node-gyp configure build",
+    "install-debug": "node-gyp configure build --debug"
   },
   "repository": {
     "type": "git",
@@ -18,12 +20,13 @@
   "homepage": "https://github.com/joao-luna-98/bitalino-js#readme",
   "devDependencies": {
     "chai": "^4.2.0",
-    "mocha": "^6.0.2"
+    "mocha": "^6.0.2",
+    "bindings": "1.2.x",
+    "nan": "latest"
   },
   "dependencies": {
-    "bluetooth-serial-port": "^2.2.3",
-    "node-bluetooth": "^1.2.5",
-    "node-gyp": "^3.8.0"
+    "node-gyp": "^3.8.0",
+    "osc": "^2.2.4"
   },
   "optionalDependencies": {
     "windows-build-tools": "^5.1.0"
