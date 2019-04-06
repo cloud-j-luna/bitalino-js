@@ -1,8 +1,9 @@
 {
   "targets": [
     {
-      "target_name": "addon",
-      "sources": [ "src/test.cpp" ]
+      "target_name": "bluetooth",
+      "sources": [ "src/bluetooth.cpp" ],
+      "ldflags": ["-lbluetooth"]
     }
   ]
 }

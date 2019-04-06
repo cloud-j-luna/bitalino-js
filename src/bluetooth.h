@@ -31,8 +31,8 @@ struct Frame
 };
 typedef std::vector<Frame> VFrame; ///< Vector of Frame's.
 
-void send(char cmd);
-int recv(void *data, int nbyttoread);
+void send();
+void recv();
 
 #ifdef _WIN32
    SOCKET	fd;

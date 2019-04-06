@@ -1,5 +1,5 @@
-const addon = require('../build/Release/addon');
+const addon = require('../build/Release/bluetooth');
 
-const obj1 = addon('hello');
-const obj2 = addon('world');
-console.log(obj1.msg, obj2.msg);
+addon.connect('98:D3:31:30:26:43');
+addon.send(0x07);
+console.log(addon.recv(24));
