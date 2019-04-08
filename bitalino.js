@@ -16,7 +16,6 @@ const BITalino = class BITalino {
         const macRegex = /^([0-9A-Fa-f]{2}[:-]){5}([0-9A-Fa-f]{2})$/
         const checkMatch = macRegex.test(address);
         this.blocking = !timeout;
-        this.buffer = Buffer.alloc(48);
 
         if (!this.blocking) {
             try {
@@ -29,27 +28,18 @@ const BITalino = class BITalino {
             this.wifi = false;
             this.serial = false;
             if (process.platform === 'win32' || process.platform === 'linux') { // Only supports linux.
-                const bluetooth = require('node-bluetooth');
+                const bluetooth = require('./build/Release/bcomm');
 
-                bluetooth.connect(address, 1, (err, connection) => {
-                    if (err) throw new Error(err);
-                    this.socket = connection;
+                bluetooth.connect('98:D3:31:30:26:43');
 
-                    console.log(`Connected to ${address}.`)
+                console.log('connected');
 
-                    this.socket.on('data', (buffer) => {
-                        console.log('from device' + buffer.toString('utf-8'));
-                        this.buffer.write(buffer);
-                    });
-
-                    setInterval(() => {
-                        setupVersion();
-                        callback(this);
-                    }, 100);
-                }, () => {
-                    console.log('cannot connect');
-                });
-                
+                this.socket = bluetooth;
+            
+                setTimeout(() => {
+                    setupVersion();
+                    callback(this);
+                }, 100);
             } else {
                 throw new Error(ErrorCode.INVALID_PLATFORM);
             }
@@ -57,11 +47,9 @@ const BITalino = class BITalino {
             || address.substr(0, 5) === '/dev/' && process.platform !== 'win32') {   // BLE
             const btSerial = new (require('bluetooth-serial-port')).BluetoothSerialPort();
             btSerial.connect(address, 115200, function () {
-                console.log('connected');
 
                 this.socket = btSerial;
             }, function () {
-                console.log('cannot connect');
             });
 
             this.wifi = false;
@@ -83,68 +71,83 @@ const BITalino = class BITalino {
         this.address = address;
 
         const setupVersion = () => {
-            this.split_string = '_v';
-            this.split_string_old = 'V';
+            const split_string = 'v';
+            const split_string_old = 'V';
             const version = this.version();
-
-            console.log('saf');
-
             if (version.indexOf(this.split_string) >= 0) {
                 var versionNumber = Number(version.split(split_string)[1]);
             } else {
-                var versionNumber = Number(version.split(split_string_old)[1]);
+                var versionNumber = Number(version.slice(10, 13));
             }
             this.isBitalino2 = (versionNumber >= 4.2);
+        }
+    }
+
+    start(samplingRate = 1, analogChannels = [0, 1, 2, 3, 4, 5]) {  
+        if (this.started === false) {
+            if(![1, 10, 100, 1000].includes(Number(samplingRate))) {
+                throw new Error(ErrorCode.INVALID_PARAMETER);
+            }
+
+            let commandSRate;
+            
+            // CommandSRate: <Fs>  0  0  0  0  1  1
+            if(Number(samplingRate) === 1000) commandSRate = 3;
+            else if(Number(samplingRate) === 100) commandSRate = 2;
+            else if(Number(samplingRate) === 10) commandSRate = 1;
+            else if(Number(samplingRate) === 1) commandSRate = 0;
+                            
+            if(!(analogChannels instanceof Array)) {
+                throw new Error(ErrorCode.INVALID_PARAMETER);
+            }
+            
+            if(analogChannels.length === 0 || analogChannels.length > 6) { // missing verifications.
+                throw new Error(ErrorCode.INVALID_PARAMETER);
+            }
+
+            this.send((commandSRate << 6) | 0x03);
+            
+            // CommandStart: A6 A5 A4 A3 A2 A1 0 1
+            let commandStart = 0x01;
+            for(const i in analogChannels) {
+                commandStart = commandStart | 1 << (2+i);
+            }
+            
+            this.send(commandStart);
+            this.started = true;
+            this.analogChannels = analogChannels;
+        } else {
+            throw new Error(ErrorCode.DEVICE_NOT_IDLE);
         }
     }
 
     version() {
         if (this.started === false) {
             // CommandVersion: 00000111, 0x07, 7
-            this.send(0xe0);
-            let versionStr = '';
-            while (true) {
-                versionStr += this.receive(1);
-                if (versionStr[-1] === '\n' && versionStr.indexOf('BITalino') >= 0) {
-                    break;
-                }
-            }
-            return versionStr.splice(versionStr.indexOf('BITalino'), -1);
+            this.send(0x07);
+
+            let versionStr = Buffer.from(this.socket.recv(24)).toString('utf-8');
+            return versionStr.slice(versionStr.indexOf('BITalino'), -1);
         } else {
             throw new Error(ErrorCode.DEVICE_NOT_IDLE);
         }
     }
 
-    receive(nBytes) {
-        const data = Buffer.alloc(nBytes);
-        const pointer = 0;
+    receive(numberOfChannels, numberOfFrames) {
         if (this.serial) {
             throw new Error(ErrorCode.NOT_SUPPORTED);
         } else {
-            while (pointer < nBytes) {
-                if (!this.blocking) {
-                    throw new Error(ErrorCode.NOT_SUPPORTED);
-                    //ready = select.select([self.socket], [], [], self.timeout)
-                    //if (ready[0]) {
-                        //pass
-                    //} else {
-                    //    throw new Error(ErrorCode.CONTACTING_DEVICE);
-                    //}
-                }
-
-                let d = null;
-                do {
-                    d = this.buffer[0];
-                    if (d !== 0 && d) {
-                        data.write(d, pointer);
-                        pointer++;
-                        break;
-                    }
-
-                    this.buffer = this.buffer.slice(1);
-                } while (d === 0);
+            if (!this.blocking) {
+                throw new Error(ErrorCode.NOT_SUPPORTED);
+                //ready = select.select([self.socket], [], [], self.timeout)
+                //if (ready[0]) {
+                    //pass
+                //} else {
+                //    throw new Error(ErrorCode.CONTACTING_DEVICE);
+                //}
             }
-            return data;
+
+            return this.socket.read(numberOfChannels, numberOfFrames);
         }
     }
 
@@ -164,10 +167,13 @@ const BITalino = class BITalino {
     }
 
     send(data) {
-        this.socket.write(Buffer.from([data], 'utf-8'), (err) => {
-            if(err) throw new Error(err);
-            console.log(`Wrote ${data}.`);
-        });
+        if(this.serial || this.wifi) {
+            this.socket.write(Buffer.from([data], 'utf-8'), (err) => {
+                if(err) throw new Error(err);
+            });
+        } else {
+            this.socket.send(data);
+        }
     }
 }
 

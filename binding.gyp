@@ -1,8 +1,8 @@
 {
   "targets": [
     {
-      "target_name": "bluetooth",
-      "sources": [ "src/bluetooth.cpp" ],
+      "target_name": "bcomm",
+      "sources": [ "src/bcomm.cpp" ],
       "ldflags": ["-lbluetooth"]
     }
   ]
