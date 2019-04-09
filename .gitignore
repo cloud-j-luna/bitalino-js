@@ -4,3 +4,4 @@ app.js
 .vscode
 build
 experimental
+coverage
