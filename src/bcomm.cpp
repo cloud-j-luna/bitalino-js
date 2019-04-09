@@ -262,7 +262,7 @@ void Init(Local<Object> exports) {
   NODE_SET_METHOD(exports, "send", Send);
   NODE_SET_METHOD(exports, "recv", Recv);
   NODE_SET_METHOD(exports, "connect", Connect);
-  NODE_SET_METHOD(exports, "readFrame", ReadStatus);
+  NODE_SET_METHOD(exports, "readFrame", ReadFrame);
 }
 
 NODE_MODULE(NODE_GYP_BCOMM, Init)

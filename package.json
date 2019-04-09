@@ -25,6 +25,8 @@
     "nan": "latest"
   },
   "dependencies": {
+    "beepbeep": "^1.2.2",
+    "beeper": "^2.0.0",
     "node-gyp": "^3.8.0",
     "osc": "^2.2.4"
   },

@@ -147,7 +147,7 @@ const BITalino = class BITalino {
                 //}
             }
 
-            return this.socket.read(numberOfChannels, numberOfFrames);
+            return this.socket.readFrame(numberOfChannels, numberOfFrames);
         }
     }
 
