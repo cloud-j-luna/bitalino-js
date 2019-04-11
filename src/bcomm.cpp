@@ -1,9 +1,11 @@
 /**
+ * Implementation of core I/O system call wrappers for
+ * communication with BITalino.
+ * Includes a connect and close method to establish a
+ * connection with the device.
  * \author      Joao Luna
  * \date        April 2019
- * 
- * 
- * 
+ * CURRENTLY ONLY SUPPORTED ON LINUX.
  */
 
 #include <node.h>
@@ -52,12 +54,12 @@ static bool checkCRC4(const unsigned char *data, int len)
 }
 
 int recv(char *buffer, int bytesToRead) {
-    printf("reading %d bytes\n", bytesToRead);
+    //printf("reading %d bytes\n", bytesToRead);
     //printf("size of buffer: %d bytes\n", sizeof(buffer));
 
     for(int n = 0; n < bytesToRead;) {
         int bytesRead = recv(s, (char *) buffer + n, bytesToRead - n, MSG_WAITALL);  // Guarantee number of bytes.
-        printf("received [%d] (%d) iteration %d\n", *buffer, bytesRead, n);
+        //printf("received [%d] (%d) iteration %d\n", *buffer, bytesRead, n);
         n += bytesRead;
     }
 
@@ -145,7 +147,7 @@ void Send(const FunctionCallbackInfo<Value>& args) {
 
     // send a message
     int bytesSent = send(s, buffer, 1, 0);
-    printf("Sent %d, status code: %d\n", *buffer, bytesSent);
+    //printf("Sent %d, status code: %d\n", *buffer, bytesSent);
 
     // Set the return value (using the passed in
     // FunctionCallbackInfo<Value>&)
@@ -253,6 +255,26 @@ void ReadFrame(const FunctionCallbackInfo<Value>& args) {
     res->Set(
             String::NewFromUtf8(isolate, "digital", NewStringType::kNormal).ToLocalChecked(),
             digitalArray);
+    Local<Array> analogArray = Array::New(isolate, nChannels);
+    analogArray->Set(0, Number::New(isolate, ((buffer[nBytes-2] & 0x0F) << 6) | (buffer[nBytes-3] >> 2)));
+    if(nChannels > 1) {
+        analogArray->Set(1, Number::New(isolate, ((buffer[nBytes-3] & 0x03) << 8) | buffer[nBytes-4]));
+    }
+    if(nChannels > 2) {
+        analogArray->Set(2, Number::New(isolate, ((buffer[nBytes-5] << 2) | (buffer[nBytes-6] >> 6))));
+    }
+    if(nChannels > 3) {
+        analogArray->Set(3, Number::New(isolate, (((buffer[nBytes-6] & 0x3F) << 4) | (buffer[nBytes-7] >> 4))));
+    }
+    if(nChannels > 4) {
+        analogArray->Set(4, Number::New(isolate, (((buffer[nBytes-7] & 0x0F) << 2) | (buffer[nBytes-8] >> 6))));
+    }
+    if(nChannels > 5) {
+        analogArray->Set(5, Number::New(isolate, (buffer[nBytes-8] & 0x3F)));
+    }
+    res->Set(
+            String::NewFromUtf8(isolate, "analog", NewStringType::kNormal).ToLocalChecked(),
+            analogArray);
     // Set the return value (using the passed in
     // FunctionCallbackInfo<Value>&)
     args.GetReturnValue().Set(res);
