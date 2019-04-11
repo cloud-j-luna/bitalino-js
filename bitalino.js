@@ -83,7 +83,7 @@ const BITalino = class BITalino {
         }
     }
 
-    start(samplingRate = 1, analogChannels = [0, 1, 2, 3, 4, 5]) {  
+    start(samplingRate = 1000, analogChannels = [0, 1, 2, 3, 4, 5]) {  
         if (this.started === false) {
             if(![1, 10, 100, 1000].includes(Number(samplingRate))) {
                 throw new Error(ErrorCode.INVALID_PARAMETER);
@@ -109,7 +109,7 @@ const BITalino = class BITalino {
             
             // CommandStart: A6 A5 A4 A3 A2 A1 0 1
             let commandStart = 0x01;
-            for(const i in analogChannels) {
+            for(const i of analogChannels) {
                 commandStart = commandStart | 1 << (2+i);
             }
             
@@ -126,7 +126,12 @@ const BITalino = class BITalino {
             // CommandVersion: 00000111, 0x07, 7
             this.send(0x07);
 
-            let versionStr = Buffer.from(this.socket.recv(24)).toString('utf-8');
+            let char, versionStr = '';
+            while(char !== '\n') {
+                char = Buffer.from(this.socket.recv(1)).toString('utf-8');
+                versionStr += char;
+            }
+            console.log(versionStr);
             return versionStr.slice(versionStr.indexOf('BITalino'), -1);
         } else {
             throw new Error(ErrorCode.DEVICE_NOT_IDLE);
@@ -174,6 +179,10 @@ const BITalino = class BITalino {
         } else {
             this.socket.send(data);
         }
+    }
+
+    close() {
+        this.socket.close();
     }
 }
 

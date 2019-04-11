@@ -1,3 +1,11 @@
+/**
+ * \author      Joao Luna
+ * \date        April 2019
+ * 
+ * 
+ * 
+ */
+
 #include <node.h>
 
 #include <stdio.h>
@@ -41,6 +49,19 @@ static bool checkCRC4(const unsigned char *data, int len)
    crc = CRC4tab[crc];
 
    return (crc == (data[len-1] & 0x0F));
+}
+
+int recv(char *buffer, int bytesToRead) {
+    printf("reading %d bytes\n", bytesToRead);
+    //printf("size of buffer: %d bytes\n", sizeof(buffer));
+
+    for(int n = 0; n < bytesToRead;) {
+        int bytesRead = recv(s, (char *) buffer + n, bytesToRead - n, MSG_WAITALL);  // Guarantee number of bytes.
+        printf("received [%d] (%d) iteration %d\n", *buffer, bytesRead, n);
+        n += bytesRead;
+    }
+
+    return bytesToRead;
 }
 
 void Connect(const FunctionCallbackInfo<Value>& args) {
@@ -89,12 +110,15 @@ void Connect(const FunctionCallbackInfo<Value>& args) {
 
     // connect to server
     status = connect(s, (struct sockaddr *)&addr, sizeof(addr));
+    //printf("status: %d\n", status);
 
     args.GetReturnValue().Set(1);
 }
 
 void Send(const FunctionCallbackInfo<Value>& args) {
     Isolate* isolate = args.GetIsolate();
+
+    usleep(150000);
 
     // Check the number of arguments passed.
     if (args.Length() < 1) {
@@ -117,12 +141,11 @@ void Send(const FunctionCallbackInfo<Value>& args) {
 
     int buffer[1] = {args[0].As<Number>()->Value()};
 
-    // send a message
-    if( status == 0 ) {
-        status = write(s, buffer, 6);
-    }
+    //printf("Sending value: %d\n", buffer[0]);
 
-    if( status < 0 ) perror("Error: ");
+    // send a message
+    int bytesSent = send(s, buffer, 1, 0);
+    printf("Sent %d, status code: %d\n", *buffer, bytesSent);
 
     // Set the return value (using the passed in
     // FunctionCallbackInfo<Value>&)
@@ -151,31 +174,14 @@ void Recv(const FunctionCallbackInfo<Value>& args) {
         return;
     }
 
-    int total_bytes_read = 0, cursor = 0;
-    int bytes_to_read = args[0].As<Number>()->Value();
-    unsigned char buf[32] = { 0 };
+    char *buf = (char *) malloc(1);
+    int n = recv(buf, 1);
 
-    memset(buf, 0, sizeof(buf));
+    //printf("Result: %c (bytes read %d)\n", *buf, n);
 
-    // read data from the client
-    while(total_bytes_read < bytes_to_read) {
-        unsigned char tmp[32] = { 0 };
-        memset(tmp, 0, sizeof(tmp));
-
-        int bytes_read = read(s, tmp, sizeof(tmp) - (bytes_to_read - total_bytes_read));
-        total_bytes_read += bytes_read;
-        for(int i = 0; i < total_bytes_read && total_bytes_read - bytes_read + i < bytes_to_read; i++) {
-            buf[cursor + i] = tmp[i];
-        }
-        //printf("received [%s] (%d)\n", tmp, bytes_read);
-        cursor += total_bytes_read;
-    }
-
-    //printf("Result: %s (bytes read %d)\n", buf, total_bytes_read);
-
-    Local<Array> res = Array::New(isolate, bytes_to_read);
-    for(int i = 0; i < bytes_to_read; i++) {
-        res->Set(i, Number::New(isolate, buf[i]));
+    Local<Array> res = Array::New(isolate, 1);
+    for(int i = 0; i < 1; i++) {
+        res->Set(i, Number::New(isolate, *buf));
     }
 
 /*
@@ -224,15 +230,11 @@ void ReadFrame(const FunctionCallbackInfo<Value>& args) {
     //printf("number of bytes: %d\n", nBytes);
 
     for(int i=0; i < nFrames; i++) {    // For each frame wanted.
-        for(int n = 0; n < nBytes;) {
-            int bytesRead = read(s, (unsigned char *) buffer + n, nBytes - n);  // Guarantee number of bytes.
-            //printf("received [%s] (%d)\n", buffer, nBytes);
-            n += bytesRead;
-        }
+        recv((char *) buffer, nBytes);
 
         while(!checkCRC4(buffer, nBytes)) {
             memmove(buffer, buffer+1, nBytes-1);
-            if(read(s, (unsigned char *) buffer + nBytes - 1, 1) != 1) return; // A timeout ocurred.
+            if(recv(s, (char *) buffer + nBytes - 1, 1, MSG_WAITALL) != 1) return; // A timeout ocurred.
             printf("crc4 failed, reading new byte %d\n", buffer[nBytes-1]);
         }
     }
@@ -256,13 +258,20 @@ void ReadFrame(const FunctionCallbackInfo<Value>& args) {
     args.GetReturnValue().Set(res);
 }
 
+void Close(const FunctionCallbackInfo<Value>& args) {
+    Isolate* isolate = args.GetIsolate();
+    
+    close(s);
 
+    args.GetReturnValue().Set(1);
+}
 
 void Init(Local<Object> exports) {
   NODE_SET_METHOD(exports, "send", Send);
   NODE_SET_METHOD(exports, "recv", Recv);
   NODE_SET_METHOD(exports, "connect", Connect);
   NODE_SET_METHOD(exports, "readFrame", ReadFrame);
+  NODE_SET_METHOD(exports, "close", Close);
 }
 
 NODE_MODULE(NODE_GYP_BCOMM, Init)
