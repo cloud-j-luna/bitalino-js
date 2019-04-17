@@ -18,21 +18,28 @@ const BITalino = class BITalino {
         this.blocking = !timeout;
 
         if (!this.blocking) {
+            throw new Error(ErrorCode.NOT_SUPPORTED);
+        }
+
+        if (!this.blocking) {
             try {
                 this.timeout = Number(timeout);
             } catch (e) {
                 throw new Error(ErrorCode.INVALID_PARAMETER);
             }
         }
+
         if (checkMatch) {
             this.wifi = false;
             this.serial = false;
-            if (process.platform === 'win32' || process.platform === 'linux') { // Only supports linux.
+            if (process.platform === 'linux') { // Only supports linux.
                 const bluetooth = require('./build/Release/bcomm');
 
-                bluetooth.connect('98:D3:31:30:26:43');
-
-                console.log('connected');
+                try {
+                    bluetooth.connect(address);
+                } catch(e) {
+                    throw e;
+                }
 
                 this.socket = bluetooth;
             
@@ -43,17 +50,6 @@ const BITalino = class BITalino {
             } else {
                 throw new Error(ErrorCode.INVALID_PLATFORM);
             }
-        } else if (address.substr(0, 3) === 'COM' && process.platform === 'win32'
-            || address.substr(0, 5) === '/dev/' && process.platform !== 'win32') {   // BLE
-            const btSerial = new (require('bluetooth-serial-port')).BluetoothSerialPort();
-            btSerial.connect(address, 115200, function () {
-
-                this.socket = btSerial;
-            }, function () {
-            });
-
-            this.wifi = false;
-            this.serial = true;
         } else if (address.replace(/[^:]/g, "").length) {
             const net = require('net');
             const dest = address.split(':');
@@ -62,7 +58,6 @@ const BITalino = class BITalino {
             });
 
             this.wifi = true;
-            this.serial = false;
         } else {
             throw new Error(ErrorCode.INVALID_ADDRESS);
         }
@@ -121,6 +116,30 @@ const BITalino = class BITalino {
         }
     }
 
+    state() {
+        if(!this.isBitalino2) {
+            throw new Error(ErrorCode.INVALID_VERSION);
+        } else if(this.started) {
+            throw new Error(ErrorCode.DEVICE_NOT_IDLE);
+        } else {
+            this.send(0x0B);
+        
+            return this.socket.readState();
+        }
+    }
+
+    stop() {
+        if(this.started) {
+            this.send(0x00);
+        } else if(this.isBitalino2) {
+            this.send(0xFF);
+        } else {
+            throw new Error(ErrorCode.DEVICE_NOT_IN_ACQUISITION);
+        }
+
+        this.started = false;
+    }
+
     version() {
         if (this.started === false) {
             // CommandVersion: 00000111, 0x07, 7
@@ -172,7 +191,7 @@ const BITalino = class BITalino {
     }
 
     send(data) {
-        if(this.serial || this.wifi) {
+        if(this.wifi) {
             this.socket.write(Buffer.from([data], 'utf-8'), (err) => {
                 if(err) throw new Error(err);
             });
@@ -182,11 +201,23 @@ const BITalino = class BITalino {
     }
 
     close() {
-        this.socket.close();
+        if(this.wifi) {
+            try {
+                this.socket.shutdown();
+                this.socket.recv(1024);
+                this.socket.close();
+            } catch(e) {
+                this.socket.close();
+            }
+        } else {
+            this.socket.close();
+        }
+        
     }
 }
 
-exports.ErrorCode = ErrorCode;
-exports.createBITalino = function (address, timeout = null, callback) {
+module.exports.ErrorCode = ErrorCode;
+module.exports.createBITalino = function (address, timeout = null, callback) {
     new BITalino(address, timeout, callback);
 };
+module.exports.BITalino = BITalino;

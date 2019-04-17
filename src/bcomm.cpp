@@ -17,6 +17,7 @@
 #include <bluetooth/rfcomm.h>
 #include <cstring>
 #include <string>
+#include <errno.h>
 
 namespace bluetooth {
 
@@ -53,12 +54,12 @@ static bool checkCRC4(const unsigned char *data, int len)
    return (crc == (data[len-1] & 0x0F));
 }
 
-int recv(char *buffer, int bytesToRead) {
+int recv(void *buffer, int bytesToRead) {
     //printf("reading %d bytes\n", bytesToRead);
     //printf("size of buffer: %d bytes\n", sizeof(buffer));
 
     for(int n = 0; n < bytesToRead;) {
-        int bytesRead = recv(s, (char *) buffer + n, bytesToRead - n, MSG_WAITALL);  // Guarantee number of bytes.
+        int bytesRead = recv(s, (void *) buffer + n, bytesToRead - n, MSG_WAITALL);  // Guarantee number of bytes.
         //printf("received [%d] (%d) iteration %d\n", *buffer, bytesRead, n);
         n += bytesRead;
     }
@@ -112,9 +113,17 @@ void Connect(const FunctionCallbackInfo<Value>& args) {
 
     // connect to server
     status = connect(s, (struct sockaddr *)&addr, sizeof(addr));
-    //printf("status: %d\n", status);
+    
+    if(status < 0) {
+        int error = errno;
+        isolate->ThrowException(Exception::Error(
+            String::NewFromUtf8(isolate,
+            strerror(error),
+            NewStringType::kNormal).ToLocalChecked()));
+        return;
+    }
 
-    args.GetReturnValue().Set(1);
+    args.GetReturnValue().Set(0);
 }
 
 void Send(const FunctionCallbackInfo<Value>& args) {
@@ -280,10 +289,75 @@ void ReadFrame(const FunctionCallbackInfo<Value>& args) {
     args.GetReturnValue().Set(res);
 }
 
+/**
+ * Read the state of the bitalino
+ */
+void ReadState(const FunctionCallbackInfo<Value>& args) {
+    Isolate* isolate = args.GetIsolate();
+
+    // Byte-align wont affect performance much, given how frequently state is called.
+    #pragma pack(1)
+    struct State {
+        unsigned short analog[6], battery;
+        unsigned char batThreshold, portsCRC;
+    };
+
+    #pragma pack()
+
+    State state;
+
+    if(recv(&state, sizeof(state)) != sizeof(state)) {
+        // Timeout
+    }
+
+    if(!checkCRC4((unsigned char *) &state, sizeof(state))) {
+        // Invalid packet.
+    }
+
+    Local<Object> res = Object::New(isolate);
+
+    Local<Array> analogArray = Array::New(isolate, 6);
+    for(int i = 0; i < 6; i++) {
+        analogArray->Set(i, Number::New(isolate, state.analog[i]));
+    }
+
+    res->Set(
+            String::NewFromUtf8(isolate, "analog", NewStringType::kNormal).ToLocalChecked(),
+            analogArray);
+    
+    res->Set(
+            String::NewFromUtf8(isolate, "battery", NewStringType::kNormal).ToLocalChecked(),
+            Number::New(isolate, state.battery));
+    res->Set(
+            String::NewFromUtf8(isolate, "batteryThreshold", NewStringType::kNormal).ToLocalChecked(),
+            Number::New(isolate, state.batThreshold));
+
+    Local<Array> digitalArray = Array::New(isolate, 4);
+    for(int i = 4; i < 4; i++) {
+        digitalArray->Set(i, Number::New(isolate, ((state.portsCRC & (0x80 >> i)) != 0)));
+    }
+
+    res->Set(
+            String::NewFromUtf8(isolate, "digital", NewStringType::kNormal).ToLocalChecked(),
+            digitalArray);
+    
+    // Set the return value (using the passed in
+    // FunctionCallbackInfo<Value>&)
+    args.GetReturnValue().Set(res);
+}
+
 void Close(const FunctionCallbackInfo<Value>& args) {
     Isolate* isolate = args.GetIsolate();
     
     close(s);
+
+    args.GetReturnValue().Set(1);
+}
+
+void Shutdown(const FunctionCallbackInfo<Value>& args) {
+    Isolate* isolate = args.GetIsolate();
+    
+    //shutdown(s);
 
     args.GetReturnValue().Set(1);
 }
@@ -293,7 +367,9 @@ void Init(Local<Object> exports) {
   NODE_SET_METHOD(exports, "recv", Recv);
   NODE_SET_METHOD(exports, "connect", Connect);
   NODE_SET_METHOD(exports, "readFrame", ReadFrame);
+  NODE_SET_METHOD(exports, "readState", ReadState);
   NODE_SET_METHOD(exports, "close", Close);
+  NODE_SET_METHOD(exports, "shutdown", Shutdown);
 }
 
 NODE_MODULE(NODE_GYP_BCOMM, Init)
