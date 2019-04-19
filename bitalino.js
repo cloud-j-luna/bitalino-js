@@ -31,7 +31,6 @@ const BITalino = class BITalino {
 
         if (checkMatch) {
             this.wifi = false;
-            this.serial = false;
             if (process.platform === 'linux') { // Only supports linux.
                 const bluetooth = require('./build/Release/bcomm');
 
@@ -66,14 +65,8 @@ const BITalino = class BITalino {
         this.address = address;
 
         const setupVersion = () => {
-            const split_string = 'v';
-            const split_string_old = 'V';
             const version = this.version();
-            if (version.indexOf(this.split_string) >= 0) {
-                var versionNumber = Number(version.split(split_string)[1]);
-            } else {
-                var versionNumber = Number(version.slice(10, 13));
-            }
+            var versionNumber = Number(version.split(/[vV]{1}/)[1]);
             this.isBitalino2 = (versionNumber >= 4.2);
         }
     }
@@ -150,10 +143,22 @@ const BITalino = class BITalino {
                 char = Buffer.from(this.socket.recv(1)).toString('utf-8');
                 versionStr += char;
             }
-            console.log(versionStr);
             return versionStr.slice(versionStr.indexOf('BITalino'), -1);
         } else {
             throw new Error(ErrorCode.DEVICE_NOT_IDLE);
+        }
+    }
+
+    pwm(output = 255) {
+        if(this.isBitalino2) {
+            if(0 <= output <= 255) {
+                this.send(0xA3);
+                this.send(output);
+            } else {
+                throw new Error(ErrorCode.INVALID_PARAMETER);
+            }
+        } else {
+            throw new Error(ErrorCode.INVALID_VERSION);
         }
     }
 

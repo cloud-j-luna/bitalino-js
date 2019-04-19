@@ -111,7 +111,6 @@ void Connect(const FunctionCallbackInfo<Value>& args) {
     addr.rc_channel = (uint8_t) 1;
     str2ba( dest, &addr.rc_bdaddr );
 
-    // connect to server
     status = connect(s, (struct sockaddr *)&addr, sizeof(addr));
     
     if(status < 0) {
@@ -350,6 +349,8 @@ void Close(const FunctionCallbackInfo<Value>& args) {
     Isolate* isolate = args.GetIsolate();
     
     close(s);
+
+    usleep(100000); // 100ms for bitalino to close connection.
 
     args.GetReturnValue().Set(1);
 }
