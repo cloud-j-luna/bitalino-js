@@ -97,7 +97,7 @@ BITalino::VDevInfo BITalino::find(void)
    char     addrStr[40];
 	WSADATA  m_data;
 
-   if (WSAStartup(0x202, &m_data) != 0)	throw Exception(Exception::PORT_INITIALIZATION);
+   if (WSAStartup(0x202, &m_data) != 0)	;
 
   WSAQUERYSETA querySet;
   ZeroMemory(&querySet, sizeof querySet);
@@ -115,7 +115,7 @@ BITalino::VDevInfo BITalino::find(void)
      if (WSALookupServiceBeginA(&querySet, flags, &hLookup) != 0)
      {
         WSACleanup();
-        throw Exception(Exception::BT_ADAPTER_NOT_FOUND);
+        ;
      }
   
 	  while (1)
@@ -156,7 +156,7 @@ BITalino::VDevInfo BITalino::find(void)
     int dev_id = hci_get_route(NULL);
     int sock = hci_open_dev(dev_id);
     if (dev_id < 0 || sock < 0)
-      throw Exception(Exception::PORT_INITIALIZATION);
+      ;
 
     inquiry_info ii[MAX_DEVS];
     inquiry_info *pii = ii;
@@ -165,7 +165,7 @@ BITalino::VDevInfo BITalino::find(void)
     if(num_rsp < 0)
     {
       ::close(sock);
-      throw Exception(Exception::PORT_INITIALIZATION);
+      ;
     }
 
     for (int i = 0; i < num_rsp; i++)
@@ -186,7 +186,7 @@ BITalino::VDevInfo BITalino::find(void)
    
 #else
    
-   throw Exception(Exception::BT_ADAPTER_NOT_FOUND);
+   ;
    
 #endif // HASBLUETOOTH
    
@@ -217,13 +217,13 @@ BITalino::BITalino(const char *address) : nChannels(0), isBitalino2(false)
 					   NULL);  // hTemplate must be NULL for comm devices 
 
       if (hCom == INVALID_HANDLE_VALUE)
-         throw Exception(Exception::PORT_COULD_NOT_BE_OPENED);
+         ;
 
       DCB dcb;
       if (!GetCommState(hCom, &dcb))
 	   {
 		   close();
-		   throw Exception(Exception::PORT_INITIALIZATION);
+		   ;
 	   }
       dcb.BaudRate = CBR_115200;
       dcb.fBinary = TRUE;
@@ -242,7 +242,7 @@ BITalino::BITalino(const char *address) : nChannels(0), isBitalino2(false)
       if (!SetCommState(hCom, &dcb))
 	   {
 		   close();
-		   throw Exception(Exception::PORT_INITIALIZATION);
+		   ;
 	   }
 
 	   COMMTIMEOUTS ct;
@@ -255,7 +255,7 @@ BITalino::BITalino(const char *address) : nChannels(0), isBitalino2(false)
 	   if (!SetCommTimeouts(hCom, &ct)) 
 	   {
 		   close();
-		   throw Exception(Exception::PORT_INITIALIZATION);
+		   ;
 	   }
    }
    else // address is a Bluetooth MAC address
@@ -264,14 +264,14 @@ BITalino::BITalino(const char *address) : nChannels(0), isBitalino2(false)
 
       WSADATA m_data;
       if (WSAStartup(0x202, &m_data) != 0)
-         throw Exception(Exception::PORT_INITIALIZATION);
+         ;
 
       SOCKADDR_BTH so_bt;
       int siz = sizeof so_bt;
       if (WSAStringToAddressA((LPSTR)address, AF_BTH, NULL, (sockaddr*)&so_bt, &siz) != 0)
       {
          WSACleanup();
-         throw Exception(Exception::INVALID_ADDRESS);
+         ;
       }
       so_bt.port = 1;
 
@@ -279,7 +279,7 @@ BITalino::BITalino(const char *address) : nChannels(0), isBitalino2(false)
       if (fd == INVALID_SOCKET)
       {
          WSACleanup();
-         throw Exception(Exception::PORT_INITIALIZATION);
+         ;
       }
 
       DWORD rcvbufsiz = 128*1024; // 128k
@@ -293,13 +293,13 @@ BITalino::BITalino(const char *address) : nChannels(0), isBitalino2(false)
          switch(err)
          {
          case WSAENETDOWN:
-            throw Exception(Exception::BT_ADAPTER_NOT_FOUND);
+            ;
 
          case WSAETIMEDOUT:
-            throw Exception(Exception::DEVICE_NOT_FOUND);
+            ;
 
          default:
-            throw Exception(Exception::PORT_COULD_NOT_BE_OPENED);
+            ;
          }
       }
 
@@ -313,19 +313,19 @@ BITalino::BITalino(const char *address) : nChannels(0), isBitalino2(false)
    {   
       fd = open(address, O_RDWR | O_NOCTTY | O_NDELAY);
       if (fd < 0)
-		   throw Exception(Exception::PORT_COULD_NOT_BE_OPENED);
+		   ;
       
       if (fcntl(fd, F_SETFL, 0) == -1)  // remove the O_NDELAY flag
       {
          close();
-		   throw Exception(Exception::PORT_INITIALIZATION);
+		   ;
       }
    
       termios term;
       if (tcgetattr(fd, &term) != 0)
       {
          close();
-		   throw Exception(Exception::PORT_INITIALIZATION);
+		   ;
       }
    
       cfmakeraw(&term);
@@ -345,13 +345,13 @@ BITalino::BITalino(const char *address) : nChannels(0), isBitalino2(false)
       if (cfsetspeed(&term, B115200) != 0)
       {
          close();
-		   throw Exception(Exception::PORT_INITIALIZATION);
+		   ;
       }
    
       if (tcsetattr(fd, TCSANOW, &term) != 0)
       {
          close();
-		   throw Exception(Exception::PORT_INITIALIZATION);
+		   ;
       }
 
       isTTY = true;
@@ -361,25 +361,24 @@ BITalino::BITalino(const char *address) : nChannels(0), isBitalino2(false)
    {
       sockaddr_rc so_bt;
       so_bt.rc_family = AF_BLUETOOTH;
-      if (str2ba(address, &so_bt.rc_bdaddr) < 0)
-         throw Exception(Exception::INVALID_ADDRESS);
+      if (str2ba(address, &so_bt.rc_bdaddr) < 0) ;
          
       so_bt.rc_channel = 1;
 
       fd = socket(AF_BLUETOOTH, SOCK_STREAM, BTPROTO_RFCOMM);
       if (fd < 0)
-         throw Exception(Exception::PORT_INITIALIZATION);
+         ;
 
       if (connect(fd, (const sockaddr*)&so_bt, sizeof so_bt) != 0)
       {
          close();
-         throw Exception(Exception::PORT_COULD_NOT_BE_OPENED);
+         ;
       }
 
       isTTY = false;
    }
 #else
-      throw Exception(Exception::PORT_COULD_NOT_BE_OPENED);
+      ;
 #endif // HASBLUETOOTH
 
 #endif // Linux or Mac OS
@@ -398,11 +397,7 @@ BITalino::BITalino(const char *address) : nChannels(0), isBitalino2(false)
 
 BITalino::~BITalino(void)
 {
-   try
-   {
-      if (nChannels != 0)  stop();
-   }
-   catch (Exception) {} // if stop() fails, close anyway
+   if (nChannels != 0)  stop();
 
    close();
 }
@@ -411,7 +406,7 @@ BITalino::~BITalino(void)
 
 std::string BITalino::version(void)
 {
-   if (nChannels != 0)   throw Exception(Exception::DEVICE_NOT_IDLE);
+   if (nChannels != 0)   ;
    
    const char *header = "BITalino";
    
@@ -424,7 +419,7 @@ std::string BITalino::version(void)
    {
       char chr;
       if (recv(&chr, sizeof chr) != sizeof chr)    // a timeout has occurred
-         throw Exception(Exception::CONTACTING_DEVICE);
+         ;
 
       const size_t len = str.size();
       if (len >= headerLen)
@@ -447,7 +442,7 @@ std::string BITalino::version(void)
 
 void BITalino::start(int samplingRate, const Vint &channels, bool simulated)
 {
-   if (nChannels != 0)   throw Exception(Exception::DEVICE_NOT_IDLE);
+   if (nChannels != 0)   ;
 
    unsigned char cmd;
    switch (samplingRate)
@@ -465,7 +460,7 @@ void BITalino::start(int samplingRate, const Vint &channels, bool simulated)
       cmd = 0xC3;
       break;
    default:
-      throw Exception(Exception::INVALID_PARAMETER);
+      ;
    }
 
    char chMask;
@@ -481,9 +476,9 @@ void BITalino::start(int samplingRate, const Vint &channels, bool simulated)
       for(Vint::const_iterator it = channels.begin(); it != channels.end(); it++)
       {
          int ch = *it;
-         if (ch < 0 || ch > 5)   throw Exception(Exception::INVALID_PARAMETER);
+         if (ch < 0 || ch > 5)   ;
          const char mask = 1 << ch;
-         if (chMask & mask)   throw Exception(Exception::INVALID_PARAMETER);
+         if (chMask & mask)   ;
          chMask |= mask;
          nChannels++;
       }
@@ -500,7 +495,7 @@ void BITalino::start(int samplingRate, const Vint &channels, bool simulated)
 
 void BITalino::stop(void)
 {
-   if (nChannels == 0)   throw Exception(Exception::DEVICE_NOT_IN_ACQUISITION);
+   if (nChannels == 0)   ;
 
    send(0x00); // 0  0  0  0  0  0  0  0 - Go to idle mode
 
@@ -513,7 +508,7 @@ void BITalino::stop(void)
 
 int BITalino::read(VFrame &frames)
 {
-   if (nChannels == 0)   throw Exception(Exception::DEVICE_NOT_IN_ACQUISITION);
+   if (nChannels == 0)   ;
 
    unsigned char buffer[8]; // frame maximum size is 8 bytes
 
@@ -558,9 +553,9 @@ int BITalino::read(VFrame &frames)
 
 void BITalino::battery(int value)
 {
-   if (nChannels != 0)   throw Exception(Exception::DEVICE_NOT_IDLE);
+   if (nChannels != 0)   ;
 
-   if (value < 0 || value > 63)   throw Exception(Exception::INVALID_PARAMETER);
+   if (value < 0 || value > 63)   ;
 
    send(value << 2);    // <bat   threshold> 0  0 - Set battery threshold
 }
@@ -574,15 +569,15 @@ void BITalino::trigger(const Vbool &digitalOutput)
 
    if (isBitalino2)
    {
-      if (len != 0 && len != 2)   throw Exception(Exception::INVALID_PARAMETER);
+      if (len != 0 && len != 2)   ;
 
       cmd = 0xB3;   // 1  0  1  1  O2 O1 1  1 - Set digital outputs
    }
    else
    {
-      if (len != 0 && len != 4)   throw Exception(Exception::INVALID_PARAMETER);
+      if (len != 0 && len != 4)   ;
 
-      if (nChannels == 0)   throw Exception(Exception::DEVICE_NOT_IN_ACQUISITION);
+      if (nChannels == 0)   ;
 
       cmd = 0x03;   // 0  0  O4 O3 O2 O1 1  1 - Set digital outputs
    }
@@ -598,9 +593,9 @@ void BITalino::trigger(const Vbool &digitalOutput)
 
 void BITalino::pwm(int pwmOutput)
 {
-	if (!isBitalino2)    throw Exception(Exception::NOT_SUPPORTED);
+	if (!isBitalino2)    ;
 
-   if (pwmOutput < 0 || pwmOutput > 255)   throw Exception(Exception::INVALID_PARAMETER);
+   if (pwmOutput < 0 || pwmOutput > 255)   ;
 
    send((char) 0xA3);    // 1  0  1  0  0  0  1  1 - Set analog output (1 byte follows: 0..255)
    send(pwmOutput);
@@ -621,17 +616,17 @@ BITalino::State BITalino::state(void)
 #pragma pack()  // restore default alignment
 
 
-	if (!isBitalino2)    throw Exception(Exception::NOT_SUPPORTED);
+	if (!isBitalino2)    ;
 
-   if (nChannels != 0)   throw Exception(Exception::DEVICE_NOT_IDLE);
+   if (nChannels != 0)   ;
 
    send(0x0B);    // 0  0  0  0  1  0  1  1 - Send device status
 
    if (recv(&statex, sizeof statex) != sizeof statex)    // a timeout has occurred
-      throw Exception(Exception::CONTACTING_DEVICE);
+      ;
 
    if (!checkCRC4((unsigned char *) &statex, sizeof statex))
-      throw Exception(Exception::CONTACTING_DEVICE);
+      ;
 
    State state;
 
@@ -701,19 +696,19 @@ void BITalino::send(char cmd)
    {
       DWORD nbytwritten = 0;
 	   if (!WriteFile(hCom, &cmd, sizeof cmd, &nbytwritten, NULL))
- 		   throw Exception(Exception::CONTACTING_DEVICE);
+ 		   ;
 
       if (nbytwritten != sizeof cmd)
- 		   throw Exception(Exception::CONTACTING_DEVICE);
+ 		   ;
    }
    else
       if (::send(fd, &cmd, sizeof cmd, 0) != sizeof cmd)
-         throw Exception(Exception::CONTACTING_DEVICE);
+         ;
    
 #else // Linux or Mac OS
 
    if (write(fd, &cmd, sizeof cmd) != sizeof cmd)
-      throw Exception(Exception::CONTACTING_DEVICE);
+      ;
 #endif
 }
 
@@ -728,13 +723,13 @@ int BITalino::recv(void *data, int nbyttoread)
       {
          DWORD nbytread = 0;
 	      if (!ReadFile(hCom, (char *) data+n, nbyttoread-n, &nbytread, NULL))
- 		      throw Exception(Exception::CONTACTING_DEVICE);
+ 		      ;
 
          if (nbytread == 0)
          {
             DWORD stat;
             if (!GetCommModemStatus(hCom, &stat) || !(stat & MS_DSR_ON))
-               throw Exception(Exception::CONTACTING_DEVICE);  // connection is lost
+               ;  // connection is lost
 
             return n;   // a timeout occurred
          }
@@ -759,7 +754,7 @@ int BITalino::recv(void *data, int nbyttoread)
    for(int n = 0; n < nbyttoread;)
    {
       int state = select(FD_SETSIZE, &readfds, NULL, NULL, &readtimeout);
-      if(state < 0)	 throw Exception(Exception::CONTACTING_DEVICE);
+      if(state < 0)	 ;
 
       if (state == 0)   return n;   // a timeout occurred
 
@@ -769,7 +764,7 @@ int BITalino::recv(void *data, int nbyttoread)
       ssize_t ret = ::read(fd, (char *) data+n, nbyttoread-n);
 #endif
 
-      if(ret <= 0)   throw Exception(Exception::CONTACTING_DEVICE);
+      if(ret <= 0)   ;
       n += ret;
    }
 
