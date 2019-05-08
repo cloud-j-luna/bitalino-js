@@ -46,7 +46,7 @@ int main()
       puts("Connecting to device...");
       
       // use one of the lines below
-      BITalino dev("98:D3:31:B2:11:6B");  // device MAC address (Windows and Linux)
+      BITalino dev("98:D3:31:30:26:43");  // device MAC address (Windows and Linux)
       
       //BITalino dev("COM5");  // Bluetooth virtual COM port or USB-UART COM port (Windows)
       

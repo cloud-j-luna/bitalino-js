@@ -71,7 +71,7 @@ const BITalino = class BITalino {
         }
     }
 
-    start(samplingRate = 1000, analogChannels = [0, 1, 2, 3, 4, 5]) {  
+    start(samplingRate = 10, analogChannels = [0, 1, 2, 3, 4, 5]) {  
         if (this.started === false) {
             if(![1, 10, 100, 1000].includes(Number(samplingRate))) {
                 throw new Error(ErrorCode.INVALID_PARAMETER);
