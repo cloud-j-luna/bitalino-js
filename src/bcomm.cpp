@@ -214,7 +214,7 @@ void ReadFrame(const FunctionCallbackInfo<Value>& args) {
     Isolate* isolate = args.GetIsolate();
 
     // Check the number of arguments passed.
-    if (args.Length() < 2) {
+    if (args.Length() < 1) {
         // Throw an Error that is passed back to JavaScript
         isolate->ThrowException(Exception::TypeError(
             String::NewFromUtf8(isolate,
@@ -224,7 +224,7 @@ void ReadFrame(const FunctionCallbackInfo<Value>& args) {
     }
 
     // Check the argument types
-    if (!args[0]->IsNumber() || !args[1]->IsNumber()) {
+    if (!args[0]->IsNumber()) {
         isolate->ThrowException(Exception::TypeError(
             String::NewFromUtf8(isolate,
                                 "Wrong arguments",
@@ -233,20 +233,17 @@ void ReadFrame(const FunctionCallbackInfo<Value>& args) {
     }
 
     int nChannels = args[0].As<Number>()->Value();
-    int nFrames = args[1].As<Number>()->Value();
     int nBytes = nChannels + 2 + ((nChannels >= 3 && nChannels <= 5) ? 1 : 0);
     unsigned char buffer[8];
 
     //printf("number of bytes: %d\n", nBytes);
 
-    for(int i=0; i < nFrames; i++) {    // For each frame wanted.
-        recv((char *) buffer, nBytes);
+    recv((char *) buffer, nBytes);
 
-        while(!checkCRC4(buffer, nBytes)) {
-            memmove(buffer, buffer+1, nBytes-1);
-            if(recv(s, (char *) buffer + nBytes - 1, 1, MSG_WAITALL) != 1) return; // A timeout ocurred.
-            printf("crc4 failed, reading new byte %d\n", buffer[nBytes-1]);
-        }
+    while(!checkCRC4(buffer, nBytes)) {
+        memmove(buffer, buffer+1, nBytes-1);
+        if(recv(s, (char *) buffer + nBytes - 1, 1, MSG_WAITALL) != 1) return; // A timeout ocurred.
+        printf("crc4 failed, reading new byte %d\n", buffer[nBytes-1]);
     }
 
     //printf("Result: %s (bytes read %d)\n", buf, total_bytes_read);

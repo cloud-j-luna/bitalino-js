@@ -163,6 +163,7 @@ const BITalino = class BITalino {
     }
 
     receive(numberOfChannels, numberOfFrames) {
+        const samples = [];
         if (this.serial) {
             throw new Error(ErrorCode.NOT_SUPPORTED);
         } else {
@@ -176,8 +177,13 @@ const BITalino = class BITalino {
                 //}
             }
 
-            return this.socket.readFrame(numberOfChannels, numberOfFrames);
+            while(numberOfFrames-- > 0) {
+                samples.push(this.socket.readFrame(numberOfChannels));
+            }
+
         }
+
+        return samples;
     }
 
     battery(value = 0) {
