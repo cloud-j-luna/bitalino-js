@@ -2,6 +2,8 @@
 
 Only Linux is currently supported. There will be an experimental wrapper of the cpp-api, before native support of Windows and MacOS.
 
+This package has only been tested on a linux system running Archlinux. Feel free to publish issues.
+
 # Dependencies
 
 Every module needs `node-gyp` installed as well as `bluez` and `libbluetooth-dev` on linux systems.
@@ -21,13 +23,13 @@ This is the native NodeJS module for use with the BITalino.
 ### How to use
 
 ```javascript
-const BITalino = require('bitalino');
+const BITalino = require('bitalino').BITalino;
 
 BITalino.createBITalino('98:D3:31:30:26:43', null, function(bitalino) {
     bitalino.send(0xFE); // Simulation mode.
     // bitalino.start();
     while(1) {
-        console.log(bitalino.receive(6, 100));
+        console.log(bitalino.receive(6, 10));
     }
 });
 ```
