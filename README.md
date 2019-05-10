@@ -36,7 +36,7 @@ BITalino.createBITalino('98:D3:31:30:26:43', null, function(bitalino) {
 
 #### Factory
 |Method|Parameters|Return|Description|
-|---|---|---|---|:---:|
+|---|---|---|---|
 |`constructor(address, timeout = null, callback)`|`constructor(String, null, Function)`|`void`|Creates a BITalino object and executes the callback. The function passed as callback will receive a BITalino object instance as its parameter.|
 
 #### BITalino

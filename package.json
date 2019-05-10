@@ -12,7 +12,11 @@
     "type": "git",
     "url": "git+https://github.com/joao-luna-98/bitalino-js.git"
   },
-  "author": "",
+  "author": "Joao Luna",
+  "keywords": [
+    "BITalino",
+    "IoT"
+  ],
   "license": "ISC",
   "bugs": {
     "url": "https://github.com/joao-luna-98/bitalino-js/issues"
