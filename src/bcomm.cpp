@@ -8,7 +8,12 @@
  * CURRENTLY ONLY SUPPORTED ON LINUX.
  */
 
+
 #include <node.h>
+
+#ifdef _WIN32 // 32-bit or 64-bit Windows
+
+#else // Linux or Mac OS
 
 #include <stdio.h>
 #include <unistd.h>
@@ -373,3 +378,5 @@ void Init(Local<Object> exports) {
 NODE_MODULE(NODE_GYP_BCOMM, Init)
 
 }  // namespace demo
+
+#endif
