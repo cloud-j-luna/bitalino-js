@@ -1,19 +1,19 @@
 const ErrorCode = {
-    INVALID_ADDRESS: "The specified address is invalid.",
-    INVALID_PLATFORM: "This platform does not support bluetooth connection.",
-    CONTACTING_DEVICE: "The computer lost communication with the device.",
-    DEVICE_NOT_IDLE: "The device is not idle.",
-    DEVICE_NOT_IN_ACQUISITION: "The device is not in acquisition mode.",
-    INVALID_PARAMETER: "Invalid parameter.",
-    INVALID_VERSION: "Only available for Bitalino 2.0.",
-    IMPORT_FAILED: "Please connect using the Virtual COM Port or confirm that PyBluez is installed; bluetooth wrapper failed to import with error: ",
-    CHANNEL_NOT_FOUND: "No channel found, verify that your adapter is working properly.",
-    NOT_SUPPORTED: "Feature not supported yet."
+    INVALID_ADDRESS: 'The specified address is invalid.',
+    INVALID_PLATFORM: 'This platform does not support bluetooth connection.',
+    CONTACTING_DEVICE: 'The computer lost communication with the device.',
+    DEVICE_NOT_IDLE: 'The device is not idle.',
+    DEVICE_NOT_IN_ACQUISITION: 'The device is not in acquisition mode.',
+    INVALID_PARAMETER: 'Invalid parameter.',
+    INVALID_VERSION: 'Only available for Bitalino 2.0.',
+    IMPORT_FAILED: 'Please connect using the Virtual COM Port or confirm that PyBluez is installed; bluetooth wrapper failed to import with error: ',
+    CHANNEL_NOT_FOUND: 'No channel found, verify that your adapter is working properly.',
+    NOT_SUPPORTED: 'Feature not supported yet.'
 };
 
 const BITalino = class BITalino {
     constructor(address, timeout = null, callback) {
-        const macRegex = /^([0-9A-Fa-f]{2}[:-]){5}([0-9A-Fa-f]{2})$/
+        const macRegex = /^([0-9A-Fa-f]{2}[:-]){5}([0-9A-Fa-f]{2})$/;
         const checkMatch = macRegex.test(address);
         this.blocking = !timeout;
 
@@ -49,7 +49,7 @@ const BITalino = class BITalino {
             } else {
                 throw new Error(ErrorCode.INVALID_PLATFORM);
             }
-        } else if (address.replace(/[^:]/g, "").length) {
+        } else if (address.replace(/[^:]/g, '').length) {
             const net = require('net');
             const dest = address.split(':');
             net.createConnection(dest[1], dest[0], function () {
@@ -188,9 +188,10 @@ const BITalino = class BITalino {
 
     battery(value = 0) {
         if (self.started == false) {
-            if (0 <= Number(value) && Number(value) <= 63) {
+            value = Number(value);
+            if (0 <= value && value <= 63) {
                 // CommandBattery: <battery threshold> 0  0
-                const commandBattery = int(value) << 2;
+                const commandBattery = value << 2;
                 this.send(commandBattery);
 
             } else {
