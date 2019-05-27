@@ -43,17 +43,17 @@ BITalino.createBITalino('98:D3:31:30:26:43', null, function(bitalino) {
 
 #### BITalino
 
-|Method|Parameters|Return|Description|Required Version|
-|---|---|---|---|:---:|
-|`send(data)`|`send(Number)`|`void`|Sends a 8-bit signal to the BITalino|*|
-|`start(samplingRate, analogChannels)`|`start(Number, Array)`|`void`|Signal the BITalino to start streaming data with a given sampling rate (1, 10, 100 or 1000) through the given number of analog channels. Defaults to sampling rate 1 on all channels|*|
-|`stop()`|`stop()`|`void`|Stops the stream of data|*|
-|`receive(numberOfChannels, numberOfFrames)`|`receive(Number, Number)`|`Array`|Receive the specified number of frames |*|
-|`battery(value = 0)`|`battery(Number)`|`void`|Set the battery threshold|*|
-|`close()`|`close()`|`void`|Closes the connection|*|
-|`version()`|`version()`|`void`|Get BITalino's version|*|
-|`state()`|`state()`|`Object`|Get a state frame from BITalino|>= 4.2|
-|`pwm(output = 255)`|`pwm(Number)`|`void`||>= 4.2|
+|Method|Return|Description|Required Version|
+|---|---|---|:---:|
+|`send(Number byte)`|`void`|Sends a 8-bit signal to the BITalino|*|
+|`start(Number samplingRate, Array analogChannels)`|`void`|Signal the BITalino to start streaming data with a given sampling rate (1, 10, 100 or 1000) through the given number of analog channels. Defaults to sampling rate 1 on all channels|*|
+|`stop()`|`void`|Stops the stream of data|*|
+|`receive(Number numberOfChannels, Number numberOfFrames)`|`Array`|Receive the specified number of frames |*|
+|`battery(Number value = 0)`|`void`|Set the battery threshold|*|
+|`close()`|`void`|Closes the connection|*|
+|`version()`|`void`|Get BITalino's version|*|
+|`state()`|`Object`|Get a state frame from BITalino|>= 4.2|
+|`pwm(Number output = 255)`|`void`||>= 4.2|
 
 ## BITalinoWrapped
 

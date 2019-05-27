@@ -77,13 +77,13 @@ const BITalino = class BITalino {
                 throw new Error(ErrorCode.INVALID_PARAMETER);
             }
 
-            let commandSRate;
+            const samplingRatesMap = {};
+            samplingRatesMap['1'] = 0;
+            samplingRatesMap['10'] = 1;
+            samplingRatesMap['100'] = 2;
+            samplingRatesMap['1000'] = 3;
             
             // CommandSRate: <Fs>  0  0  0  0  1  1
-            if(Number(samplingRate) === 1000) commandSRate = 3;
-            else if(Number(samplingRate) === 100) commandSRate = 2;
-            else if(Number(samplingRate) === 10) commandSRate = 1;
-            else if(Number(samplingRate) === 1) commandSRate = 0;
                             
             if(!(analogChannels instanceof Array)) {
                 throw new Error(ErrorCode.INVALID_PARAMETER);
@@ -93,7 +93,7 @@ const BITalino = class BITalino {
                 throw new Error(ErrorCode.INVALID_PARAMETER);
             }
 
-            this.send((commandSRate << 6) | 0x03);
+            this.send((samplingRatesMap[samplingRate] << 6) | 0x03);
             
             // CommandStart: A6 A5 A4 A3 A2 A1 0 1
             let commandStart = 0x01;
