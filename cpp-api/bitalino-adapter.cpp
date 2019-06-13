@@ -113,7 +113,7 @@ void BITalinoAdapter::Start(const FunctionCallbackInfo<Value>& args) {
 }
 
 void BITalinoAdapter::Stop(const FunctionCallbackInfo<Value>& args) {
-  Isolate* isolate = args.GetIsolate();
+  // Isolate* isolate = args.GetIsolate();
 
   BITalinoAdapter* obj = ObjectWrap::Unwrap<BITalinoAdapter>(args.Holder());
 
@@ -146,7 +146,15 @@ void BITalinoAdapter::Read(const FunctionCallbackInfo<Value>& args) {
   int numberOfFrames = args[0].As<Number>()->Value();
   BITalino::VFrame frames(numberOfFrames);
 
-  obj->adaptee.read(frames);
+  int framesRead = obj->adaptee.read(frames);
+  
+  if(framesRead < numberOfFrames) {
+    isolate->ThrowException(Exception::Error(
+          String::NewFromUtf8(isolate,
+                              "Device timeout",
+                              NewStringType::kNormal).ToLocalChecked()));
+    return;
+  }
 
   Local<Array> framesArray = Array::New(isolate, numberOfFrames);
     for(int i = 0; i < numberOfFrames; i++) {

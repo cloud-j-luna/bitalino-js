@@ -4,23 +4,25 @@ Only Linux is currently supported. There will be an experimental wrapper of the 
 
 This package has only been tested on a linux system running Archlinux. Feel free to publish issues.
 
-# Dependencies
+## Dependencies
 
 Every module needs `node-gyp` installed as well as `bluez` and `libbluetooth-dev` on linux systems.
 
-# Installation
+## Installation
 
-```
+```bash
 npm install --save bitalino
 ```
 
-# Modules
+## Modules
 
-## BITalino
+### BITalino
 
 This is the native NodeJS module for use with the BITalino.
 
-### How to use
+#### How to use
+
+**Remember** the BITalino should be paired first.
 
 ```javascript
 const BITalino = require('bitalino').BITalino;
@@ -34,19 +36,21 @@ BITalino.createBITalino('98:D3:31:30:26:43', null, function(bitalino) {
 });
 ```
 
-### API
+#### API
 
-#### Factory
-|Method|Parameters|Return|Description|
-|---|---|---|---|
-|`constructor(address, timeout = null, callback)`|`constructor(String, null, Function)`|`void`|Creates a BITalino object and executes the callback. The function passed as callback will receive a BITalino object instance as its parameter.|
+For details on BITalino Micro Controller Unit visit [BITalino's official documentation](https://bitalino.com/datasheets/REVOLUTION_MCU_Block_Datasheet.pdf).
 
-#### BITalino
+##### Factory
+|Method|Return|Description|
+|---|---|---|
+|`createBITalino(String address, timeout = null, Function callback)`|`void`|Creates a BITalino object and executes the callback. The function passed as callback will receive a BITalino object instance as its parameter.|
+
+##### BITalino
 
 |Method|Return|Description|Required Version|
 |---|---|---|:---:|
-|`send(Number byte)`|`void`|Sends a 8-bit signal to the BITalino|*|
-|`start(Number samplingRate, Array analogChannels)`|`void`|Signal the BITalino to start streaming data with a given sampling rate (1, 10, 100 or 1000) through the given number of analog channels. Defaults to sampling rate 1 on all channels|*|
+|`send(Number byte)`|`void`|Sends a 8-bit message to the BITalino|*|
+|`start(Number samplingRate, Array analogChannels)`|`void`|Message the BITalino to start streaming data with a given sampling rate (1, 10, 100 or 1000) through the given number of analog channels. Defaults to sampling rate 1 on all channels|*|
 |`stop()`|`void`|Stops the stream of data|*|
 |`receive(Number numberOfChannels, Number numberOfFrames)`|`Array`|Receive the specified number of frames |*|
 |`battery(Number value = 0)`|`void`|Set the battery threshold|*|
@@ -55,7 +59,7 @@ BITalino.createBITalino('98:D3:31:30:26:43', null, function(bitalino) {
 |`state()`|`Object`|Get a state frame from BITalino|>= 4.2|
 |`pwm(Number output = 255)`|`void`||>= 4.2|
 
-## BITalinoWrapped
+### BITalinoWrapped
 
 A wrapper of the BITalino's C++ API.
 **WARNING**: This module is only intended for use while the main module is under development.
