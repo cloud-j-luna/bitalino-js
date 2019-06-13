@@ -11,6 +11,11 @@ const ErrorCode = {
     NOT_SUPPORTED: 'Feature not supported yet.'
 };
 
+// Constants
+const VCC = 3.3; // Volts
+const gEMG = 1009; // Sensor gain
+const gECG = 1100; // Sensor gain
+
 const BITalino = class BITalino {
     constructor(address, timeout = null, callback) {
         const macRegex = /^([0-9A-Fa-f]{2}[:-]){5}([0-9A-Fa-f]{2})$/;
@@ -53,7 +58,6 @@ const BITalino = class BITalino {
             const net = require('net');
             const dest = address.split(':');
             net.createConnection(dest[1], dest[0], function () {
-                console.log('connected');
             });
 
             this.wifi = true;
@@ -71,7 +75,7 @@ const BITalino = class BITalino {
         }
     }
 
-    start(samplingRate = 10, analogChannels = [0, 1, 2, 3, 4, 5]) {  
+    start(samplingRate = 100, analogChannels = [0, 1, 2, 3, 4, 5]) {  
         if (this.started === false) {
             if(![1, 10, 100, 1000].includes(Number(samplingRate))) {
                 throw new Error(ErrorCode.INVALID_PARAMETER);
@@ -198,14 +202,16 @@ const BITalino = class BITalino {
                 throw new Error(ErrorCode.INVALID_PARAMETER);
             }
         } else {
-            throw new Error(ErrorCode.DEVICE_NOT_IDLE)
+            throw new Error(ErrorCode.DEVICE_NOT_IDLE);
         }
     }
 
     send(data) {
         if(this.wifi) {
             this.socket.write(Buffer.from([data], 'utf-8'), (err) => {
-                if(err) throw new Error(err);
+                if(err) {
+                    throw new Error(err);
+                }
             });
         } else {
             this.socket.send(data);
@@ -226,9 +232,10 @@ const BITalino = class BITalino {
         }
         
     }
-}
+};
 
 module.exports.ErrorCode = ErrorCode;
+module.exports.VCC = VCC;
 module.exports.createBITalino = function (address, timeout = null, callback) {
     new BITalino(address, timeout, callback);
 };

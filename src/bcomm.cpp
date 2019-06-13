@@ -334,7 +334,7 @@ void ReadState(const FunctionCallbackInfo<Value>& args) {
             Number::New(isolate, state.batThreshold));
 
     Local<Array> digitalArray = Array::New(isolate, 4);
-    for(int i = 4; i < 4; i++) {
+    for(int i = 0; i < 4; i++) {
         digitalArray->Set(i, Number::New(isolate, ((state.portsCRC & (0x80 >> i)) != 0)));
     }
 
