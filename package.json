@@ -1,6 +1,6 @@
 {
   "name": "bitalino",
-  "version": "1.2.5",
+  "version": "1.3.0",
   "description": "Node API for BITalino",
   "main": "index.js",
   "scripts": {
