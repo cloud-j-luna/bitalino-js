@@ -1,5 +1,7 @@
 # `bitalino` UNDER DEVELOPMENT
 
+[![Codacy Badge](https://api.codacy.com/project/badge/Grade/922a9f6befcb4ceb90eeef4d40665a0a)](https://app.codacy.com/app/joao-luna-98/bitalino-js?utm_source=github.com&utm_medium=referral&utm_content=joao-luna-98/bitalino-js&utm_campaign=Badge_Grade_Settings)
+
 Only Linux is currently supported. There will be an experimental wrapper of the cpp-api, before native support of Windows and MacOS.
 
 This package has only been tested on a linux system running Archlinux. Feel free to publish issues.
