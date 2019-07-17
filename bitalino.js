@@ -49,14 +49,6 @@ const BITalino = class BITalino {
             } else {
                 throw new Error(ErrorCode.INVALID_PLATFORM);
             }
-        } else if (address.replace(/[^:]/g, '').length) {
-            const net = require('net');
-            const dest = address.split(':');
-            net.createConnection(dest[1], dest[0], function () {
-                console.log('connected');
-            });
-
-            this.wifi = true;
         } else {
             throw new Error(ErrorCode.INVALID_ADDRESS);
         }
@@ -71,7 +63,7 @@ const BITalino = class BITalino {
         }
     }
 
-    start(samplingRate = 10, analogChannels = [0, 1, 2, 3, 4, 5]) {  
+    start(samplingRate = 1000, analogChannels = [0, 1, 2, 3, 4, 5]) {  
         if (this.started === false) {
             if(![1, 10, 100, 1000].includes(Number(samplingRate))) {
                 throw new Error(ErrorCode.INVALID_PARAMETER);
@@ -169,12 +161,6 @@ const BITalino = class BITalino {
         } else {
             if (!this.blocking) {
                 throw new Error(ErrorCode.NOT_SUPPORTED);
-                //ready = select.select([self.socket], [], [], self.timeout)
-                //if (ready[0]) {
-                    //pass
-                //} else {
-                //    throw new Error(ErrorCode.CONTACTING_DEVICE);
-                //}
             }
 
             while(numberOfFrames-- > 0) {

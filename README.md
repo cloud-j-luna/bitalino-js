@@ -1,26 +1,26 @@
 # `bitalino` UNDER DEVELOPMENT
 
-Only Linux is currently supported. There will be an experimental wrapper of the cpp-api, before native support of Windows and MacOS.
+Only Linux is currently supported.
 
 This package has only been tested on a linux system running Archlinux. Feel free to publish issues.
 
-# Dependencies
+## Dependencies
 
 Every module needs `node-gyp` installed as well as `bluez` and `libbluetooth-dev` on linux systems.
 
-# Installation
+## Installation
 
 ```
 npm install --save bitalino
 ```
 
-# Modules
+## Modules
 
-## BITalino
+### BITalino
 
 This is the native NodeJS module for use with the BITalino.
 
-### How to use
+#### How to use
 
 ```javascript
 const BITalino = require('bitalino').BITalino;
@@ -34,14 +34,14 @@ BITalino.createBITalino('98:D3:31:30:26:43', null, function(bitalino) {
 });
 ```
 
-### API
+#### API
 
-#### Factory
+##### Factory
 |Method|Parameters|Return|Description|
 |---|---|---|---|
 |`constructor(address, timeout = null, callback)`|`constructor(String, null, Function)`|`void`|Creates a BITalino object and executes the callback. The function passed as callback will receive a BITalino object instance as its parameter.|
 
-#### BITalino
+##### BITalino
 
 |Method|Parameters|Return|Description|Required Version|
 |---|---|---|---|:---:|
@@ -55,10 +55,6 @@ BITalino.createBITalino('98:D3:31:30:26:43', null, function(bitalino) {
 |`state()`|`state()`|`Object`|Get a state frame from BITalino|>= 4.2|
 |`pwm(output = 255)`|`pwm(Number)`|`void`||>= 4.2|
 
-## BITalinoWrapped
+### BITalinoWrapped
 
-A wrapper of the BITalino's C++ API.
-**WARNING**: This module is only intended for use while the main module is under development.
-Although it might have features that are not currently implemented on the main module, this module does not handle errors.
-
-Check the BITalino's C++ API documentation [here](http://bitalino.com/docs/cpp-api/annotated.html).
+BITalino wrapped was removed recently, check older branches if you still want to use it.
