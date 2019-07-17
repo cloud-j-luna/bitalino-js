@@ -2,7 +2,7 @@
 
 [![Codacy Badge](https://api.codacy.com/project/badge/Grade/922a9f6befcb4ceb90eeef4d40665a0a)](https://app.codacy.com/app/joao-luna-98/bitalino-js?utm_source=github.com&utm_medium=referral&utm_content=joao-luna-98/bitalino-js&utm_campaign=Badge_Grade_Settings)
 
-Only Linux is currently supported. There will be an experimental wrapper of the cpp-api, before native support of Windows and MacOS.
+Only Linux is currently supported.
 
 This package has only been tested on a linux system running Archlinux. Feel free to publish issues.
 
@@ -63,8 +63,4 @@ For details on BITalino Micro Controller Unit visit [BITalino's official documen
 
 ### BITalinoWrapped
 
-A wrapper of the BITalino's C++ API.
-**WARNING**: This module is only intended for use while the main module is under development.
-Although it might have features that are not currently implemented on the main module, this module does not handle errors.
-
-Check the BITalino's C++ API documentation [here](http://bitalino.com/docs/cpp-api/annotated.html).
+BITalino wrapped was removed recently, check older branches if you still want to use it.
