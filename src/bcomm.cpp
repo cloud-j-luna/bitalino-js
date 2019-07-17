@@ -133,7 +133,12 @@ void Connect(const FunctionCallbackInfo<Value>& args) {
 void Send(const FunctionCallbackInfo<Value>& args) {
     Isolate* isolate = args.GetIsolate();
 
-    usleep(150000);
+    struct timespec *rqtp = (struct timespec*) malloc(sizeof(struct timespec));
+
+    rqtp->tv_sec = 0;
+    rqtp->tv_nsec = 150000000;
+
+    nanosleep(rqtp, NULL);
 
     // Check the number of arguments passed.
     if (args.Length() < 1) {
@@ -334,7 +339,7 @@ void ReadState(const FunctionCallbackInfo<Value>& args) {
             Number::New(isolate, state.batThreshold));
 
     Local<Array> digitalArray = Array::New(isolate, 4);
-    for(int i = 4; i < 4; i++) {
+    for(int i = 0; i < 4; i++) {
         digitalArray->Set(i, Number::New(isolate, ((state.portsCRC & (0x80 >> i)) != 0)));
     }
 
@@ -349,10 +354,15 @@ void ReadState(const FunctionCallbackInfo<Value>& args) {
 
 void Close(const FunctionCallbackInfo<Value>& args) {
     Isolate* isolate = args.GetIsolate();
+
+    struct timespec *rqtp = (struct timespec*) malloc(sizeof(struct timespec));
+
+    rqtp->tv_sec = 0;
+    rqtp->tv_nsec = 100000000;
     
     close(s);
 
-    usleep(100000); // 100ms for bitalino to close connection.
+    nanosleep(rqtp, NULL);  // 100ms for bitalino to close connection.
 
     args.GetReturnValue().Set(1);
 }

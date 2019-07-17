@@ -11,6 +11,9 @@ const ErrorCode = {
     NOT_SUPPORTED: 'Feature not supported yet.'
 };
 
+// Constants
+const VCC = 3.3; // Volts
+
 const BITalino = class BITalino {
     constructor(address, timeout = null, callback) {
         const macRegex = /^([0-9A-Fa-f]{2}[:-]){5}([0-9A-Fa-f]{2})$/;
@@ -69,13 +72,13 @@ const BITalino = class BITalino {
                 throw new Error(ErrorCode.INVALID_PARAMETER);
             }
 
-            let commandSRate;
+            const samplingRatesMap = {};
+            samplingRatesMap['1'] = 0;
+            samplingRatesMap['10'] = 1;
+            samplingRatesMap['100'] = 2;
+            samplingRatesMap['1000'] = 3;
             
             // CommandSRate: <Fs>  0  0  0  0  1  1
-            if(Number(samplingRate) === 1000) commandSRate = 3;
-            else if(Number(samplingRate) === 100) commandSRate = 2;
-            else if(Number(samplingRate) === 10) commandSRate = 1;
-            else if(Number(samplingRate) === 1) commandSRate = 0;
                             
             if(!(analogChannels instanceof Array)) {
                 throw new Error(ErrorCode.INVALID_PARAMETER);
@@ -85,7 +88,7 @@ const BITalino = class BITalino {
                 throw new Error(ErrorCode.INVALID_PARAMETER);
             }
 
-            this.send((commandSRate << 6) | 0x03);
+            this.send((samplingRatesMap[samplingRate] << 6) | 0x03);
             
             // CommandStart: A6 A5 A4 A3 A2 A1 0 1
             let commandStart = 0x01;
@@ -184,14 +187,16 @@ const BITalino = class BITalino {
                 throw new Error(ErrorCode.INVALID_PARAMETER);
             }
         } else {
-            throw new Error(ErrorCode.DEVICE_NOT_IDLE)
+            throw new Error(ErrorCode.DEVICE_NOT_IDLE);
         }
     }
 
     send(data) {
         if(this.wifi) {
             this.socket.write(Buffer.from([data], 'utf-8'), (err) => {
-                if(err) throw new Error(err);
+                if(err) {
+                    throw new Error(err);
+                }
             });
         } else {
             this.socket.send(data);
@@ -212,9 +217,10 @@ const BITalino = class BITalino {
         }
         
     }
-}
+};
 
 module.exports.ErrorCode = ErrorCode;
+module.exports.VCC = VCC;
 module.exports.createBITalino = function (address, timeout = null, callback) {
     new BITalino(address, timeout, callback);
 };
