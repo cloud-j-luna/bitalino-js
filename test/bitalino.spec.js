@@ -1,4 +1,5 @@
 const assert = require('chai').assert;
+const sinon = require('sinon');
 const { createBITalino, BITalino, ErrorCode } = require('../index');
 
 const BITALINO_MAC = '98:D3:31:30:26:43';

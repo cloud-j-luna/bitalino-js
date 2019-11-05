@@ -29,7 +29,8 @@
     "nan": "latest"
   },
   "dependencies": {
-    "node-gyp": "^4.0.0"
+    "node-gyp": "^4.0.0",
+    "sinon": "^7.5.0"
   },
   "optionalDependencies": {
     "windows-build-tools": "^5.1.0"
